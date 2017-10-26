@@ -9,6 +9,10 @@ client = TwitchClient(client_id=)#Need to grab twitch client ID
 streams = client.streams.get_live_streams(game='warframe',limit=100)#Change this number to change the amount of streamers the twitch API pulls
 checkList = ['!drop' , 'achievement']
 
+
+#credit to @jancodes for the idea
+
+
 def multiTwitch(myList):
     Popen('taskkill /F /IM chrome.exe', shell=True)#Can change "chrome" to any other browser, currently script opens up your defualt browser
     #Note this will close all instances of what ever browser is put 
