@@ -1,13 +1,25 @@
 import webbrowser
 import os
-from twitch import TwitchClient
+from twitch import Helix
 from subprocess import Popen
 import tkinter
 from tkinter import *
 
-client = TwitchClient(client_id=)#Need to grab twitch client ID
-streams = client.streams.get_live_streams(game='warframe',limit=100)#Change this number to change the amount of streamers the twitch API pulls
-checkList = ['!drop' , 'achievement']
+client = Helix(client_id='', bearer_token='')#Need to grab twitch client ID and bearer token
+count=20#Change this number to change the amount of streamers the twitch API pulls
+game_name="warframe"
+f=input("write game name : ")
+while(len(f)>0):
+    if client.game(name=f)==None:
+        f=input("wrong name write game name : ")
+    else:
+        game_name=f
+        break
+game = client.game(name=game_name).id
+print(game)
+def check_for_streams():
+    global streams
+    streams = client.streams(game_id=game, first=count).users
 
 
 #credit to @jancodes for the idea
@@ -18,34 +30,32 @@ def multiTwitch(myList):
     #Note this will close all instances of what ever browser is put 
     window.after(2000)
     #multitwitch doesn't allow for more than 25 streams open at once
-    #Set my limit to 20 to reduce cpu usage for each multitwitch tab
-    while len(myList) > 20:
-        url = 'http://multitwitch.tv/'
-        for x in range(20):
-            url = url + (myList[0] + '/')
-            myList.pop(0)
-        webbrowser.open_new(url)
-        window.after(120000)#number in ms, currently set to 2 minute intervals between opening each multitwitch tab to allow streams to load
+    #Set my limit to 5 to reduce cpu usage for each multitwitch tab
     url = 'http://multitwitch.tv/'
-    for streamers in myList:
-        url = url + (streamers + '/')
+    max=5
+    if(len(myList)<5):
+        max=len.myList
+    for i in range(max):
+        url = url + (myList[i] + '/')
     webbrowser.open_new(url)
 
     
         
 def warframe():
+    check_for_streams()
     streamerID=[]
-    counter = 0
-    while counter < (len(streams)-1):
-        tester = str.lower((streams[counter]['channel']['status']))
-        if any(x in tester for x in checkList):
-            if (streams[counter]['stream_type']) == 'live':
-                if (streams[counter]['channel']['partner']) == False:
-                    if (streams[counter]['viewers']) >= 15: #Number of viewers stream must have to be opened up if they aren't partnered
-                        streamerID.append(streams[counter]['channel']['name'])
-                else:
-                    streamerID.append(streams[counter]['channel']['name'])
-        counter = counter + 1
+    for i in range(count-1):
+        try:
+            a=next(streams)
+        except StopIteration:
+            break
+        tester = str.lower(a[0].user_name)
+        if (a[0].type) == 'live':
+            if (a[1].broadcaster_type) != 'partner':
+                if (a[0].viewer_count) >= 15: #Number of viewers stream must have to be opened up if they aren't partnered
+                    streamerID.append(tester)
+            else:
+                streamerID.append(tester)
     multiTwitch(streamerID)
     return ("Finished")
 
@@ -71,7 +81,7 @@ def End():
         
 
 window = tkinter.Tk()
-window.title("Warframe Stream Drops")
+window.title(client.game(name=game_name).name +" Stream Drops")
 
 
 startButton = Button(window, text= "Start", command=Drops, bg='green', fg='black')
